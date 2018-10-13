@@ -15,5 +15,3 @@ typedef struct Edge {
 } Edge;
 
 void readFile (char*);
-
-void processChar(Edge* activeNode, Edge* activeEdge, int activeLength );
