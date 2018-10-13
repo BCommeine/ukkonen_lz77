@@ -14,7 +14,8 @@ void readFile(char *fileName) {
     int* current = malloc(sizeof(int));
     struct Edge* root = malloc (sizeof(struct Edge));
 
-    Edge* activeEdge = root;
+    Edge* activeEdge;
+    Edge* activeNode = root;
     int activeLength = 0;
     int remainder = 1;
 
@@ -27,67 +28,64 @@ void readFile(char *fileName) {
         code[++n] = (char)c;
         *current = (int) n;
 
-        // Check if we're dealing with duplicates
-        if (activeEdge == root && activeLength == 0) {
-            if (root->children[c] == NULL) {
-                struct Edge* new = malloc (sizeof(struct Edge));
-                new->start = n;
-                new->end = current;
-                root->children[c] = new;
-            } else {
-                activeEdge = root->children[c];
-                activeLength = 1;
-                remainder++;
-            }
-        } else {
-            if  (activeLength < *activeEdge->end - activeEdge->start) {
-                if (code[activeEdge->start + activeLength] == c) {
-                    activeLength++;
-                    remainder++;
-                } else {
-                    struct Edge* newEdge = malloc (sizeof(struct Edge));
-                    newEdge->start = n;
-                    newEdge->end = current;
-                    activeEdge->children[c] = newEdge;
-                    struct Edge* splitEdge = malloc (sizeof(struct Edge));
-                    splitEdge->start = activeEdge->start + activeLength;
-                    splitEdge->end = activeEdge->end;
-                    activeEdge->children[code[activeEdge->start + activeLength]] = splitEdge;
-                    int end = malloc(sizeof(int));
-                    end = activeEdge->start + activeLength;
-                    activeEdge->end = &end;
-                }
-            } else {
-                if (activeEdge->children[c] == NULL) {
+        do {
+            // Check if we're dealing with duplicates
+            if (activeNode == root && activeLength == 0) {
+                if (root->children[c] == NULL) {
                     struct Edge* new = malloc (sizeof(struct Edge));
                     new->start = n;
                     new->end = current;
-                    activeEdge->children[c] = new;
+                    root->children[c] = new;
+                    break;
                 } else {
-                    activeEdge = activeEdge->children[c];
+                    activeEdge = root->children[c];
                     activeLength = 1;
                     remainder++;
+                    break;
+                }
+            } else {
+                if (activeLength < *activeEdge->end - activeEdge->start) {
+                    // Er zijn nog characters op de huidige edge
+                    if (code[activeEdge->start + activeLength] == c) {
+                        // Het volgend karakter zit al in de trie
+                        activeLength++;
+                        remainder++;
+                        break;
+                    } else {
+                        // Split een edge in de originele en een nieuwe
+                        struct Edge *newEdge = malloc(sizeof(struct Edge));
+                        newEdge->start = n;
+                        newEdge->end = current;
+                        activeEdge->children[c] = newEdge;
+                        struct Edge *splitEdge = malloc(sizeof(struct Edge));
+                        splitEdge->start = activeEdge->start + activeLength;
+                        splitEdge->end = activeEdge->end;
+                        activeEdge->children[code[activeEdge->start + activeLength]] = splitEdge;
+                        int end = malloc(sizeof(int));
+                        end = activeEdge->start + activeLength;
+                        activeEdge->end = &end;
+                        remainder--;
+                        if (activeNode == root) {
+                            activeEdge = root->children[code[--activeLength]];
+                        }
+                    }
+                } else {
+                    // Vorige c is het laatste karakter op de edge
+                    if (activeEdge->children[c] == NULL) {
+                        struct Edge *new = malloc(sizeof(struct Edge));
+                        new->start = n;
+                        new->end = current;
+                        activeEdge->children[c] = new;
+                        remainder--;
+                    } else {
+                        activeNode = activeEdge;
+                        activeEdge = activeEdge->children[c];
+                        activeLength = 1;
+                        remainder++;
+                        break;
+                    }
                 }
             }
-        }
-//        //  Check if already in root
-//        if (root->children[c] == NULL){
-//            struct Edge* new = malloc (sizeof(struct Edge));
-//            new->start = n;
-//            new->end = current;
-//            root->children[c] = new;
-//        } else {
-//            if (activeEdge == NULL) {
-//                activeEdge = root->children[c];
-//                activeLength = 1;
-//                remainder++;
-//                printf("%c DOUBLE \n", c);
-//
-//            }
-//        }
-
-//        printf("%c\n", c);
-    }
-
-    code[n] = '\0';
+        } while (1);
+      }
 }

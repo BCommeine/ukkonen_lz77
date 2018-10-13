@@ -11,6 +11,9 @@ typedef struct Edge {
     int start;
     int* end;
     struct Edge* children[256];
+    struct Edge* suffix_link;
 } Edge;
 
 void readFile (char*);
+
+void processChar(Edge* activeNode, Edge* activeEdge, int activeLength );
