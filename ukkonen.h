@@ -10,6 +10,8 @@
 #include <stdbool.h>
 #include <stdio.h>
 
+#define ASCII_SIZE 128
+
 typedef struct Edge {
     int id;
     int start;
@@ -28,4 +30,4 @@ bool is_leaf (Edge* edge);
 
 char* get_children (Edge* edge, char* code);
 
-void edge_print(Edge* edge, char* code);
+void edge_print(Edge* edge, char* code, int distance);
