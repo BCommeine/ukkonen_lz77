@@ -19,6 +19,7 @@ void readFile(char *fileName) {
     int n = -1;
     int c;
     struct Edge* root = create_edge();
+    activate_edge(root);
 
     Edge* activeEdge;
     Edge* activeNode = root;
@@ -71,12 +72,15 @@ void readFile(char *fileName) {
                     struct Edge *splitEdge = create_edge();
 
                     // SWAP
-                    Edge* tmp = splitEdge->children;
+                    Edge** tmp = splitEdge->children;
                     splitEdge->children = activeEdge->children;
                     activeEdge->children = tmp;
 
                     splitEdge->start = activeEdge->start + activeLength;
                     splitEdge->end = activeEdge->end;
+                    if (activeEdge->children == NULL) {
+                        activate_edge(activeEdge);
+                    }
                     activeEdge->children[code[activeEdge->start + activeLength]] = splitEdge;
                     activeEdge->children[c] = newEdge;
                     int* end = malloc(sizeof(int));
@@ -85,6 +89,7 @@ void readFile(char *fileName) {
                     remainder--;
                     if (lastSplit != NULL) {
                         lastSplit->suffix_link = activeEdge;
+//                        printf("Suffix link\n");
                     }
                     lastSplit = activeEdge;
                     if (activeNode == root) {
@@ -105,12 +110,15 @@ void readFile(char *fileName) {
                     struct Edge *new = create_edge();
                     new->start = n;
                     new->end = &n;
+                    if (lastSplit != NULL) {
+                        lastSplit->suffix_link = activeEdge;
+                    }
                     activeEdge->children[c] = new;
                     remainder--;
                 } else {
                     activeNode = activeEdge;
                     activeEdge = activeEdge->children[c];
-                    activeLength = 1; // Moet dit niet 0 zijn?
+                    activeLength = 0;
                     remainder++;
                     c = fgetc(file);
                     code[++n] = (char) c;
@@ -125,58 +133,57 @@ void readFile(char *fileName) {
     depth_first_search(root, id);
     free(id);
     edge_print(root, code, 0);
+    printf("\n");
 }
 
 Edge* create_edge() {
     Edge* e         = malloc(sizeof(Edge));
-    e->children     = calloc(ASCII_SIZE, sizeof(Edge*));
     e->suffix_link  = NULL;
     return e;
 }
 
+void activate_edge(Edge* e) {
+    e->children     = calloc(ASCII_SIZE, sizeof(Edge*));
+}
+
 void edge_print(Edge* edge, char* code, int distance) {
     int end;
-    if (edge->end == NULL){
-        if (is_leaf(edge)){
+    if (is_leaf(edge)) {
+        if (edge->end == NULL) {
+            // edge is de root
             printf("%d @ -\n", edge->id);
         } else {
-            char* children = get_children(edge, code);
-            printf("%d @ - = %s\n", edge->id, children);
-        }
-        end = 0;
-    } else{
-        if (is_leaf(edge)){
             printf("%d @ %d-%d\n", edge->id, edge->start - distance , *edge->end);
+        }
+    } else {
+        if (edge->end == NULL) {
+            end = 0;
+            char* children = get_children(edge, code);
+            printf("%d @  -  = %s\n", edge->id, children);
         } else {
+            end = *edge->end + 1;
             char* children = get_children(edge, code);
             printf("%d @ %d-%d = %s\n", edge->id, *edge->end - distance, *edge->end, children);
         }
-        end = *edge->end + 1;
-    }
-    for (int i = 0; i< ASCII_SIZE; i++) {
-        if (edge->children[i] != NULL) {
-            edge_print(edge->children[i], code, distance + (end - edge->start));
+        for (int i = 0; i< ASCII_SIZE; i++) {
+            if (edge->children[i] != NULL) {
+                edge_print(edge->children[i], code, distance + (end - edge->start));
+            }
         }
     }
 }
 
 bool is_leaf(Edge* edge) {
-    bool leaf = true;
-    int index = 0;
-    while (leaf && index < ASCII_SIZE) {
-        if (edge->children[index] != NULL) {
-            leaf = false;
-        }
-        index++;
-    }
-    return leaf;
+    return edge->children == NULL;
 }
 
 void depth_first_search(Edge* edge, int* id) {
-    for (int i = 0; i< ASCII_SIZE; i++) {
-        if (edge->children[i] != NULL) {
-            edge->children[i]->id = ++*id;
-            depth_first_search(edge->children[i], id);
+    if (edge->children != NULL) {
+        for (int i = 0; i< ASCII_SIZE; i++) {
+            if (edge->children[i] != NULL) {
+                edge->children[i]->id = ++*id;
+                depth_first_search(edge->children[i], id);
+            }
         }
     }
 }
@@ -185,7 +192,7 @@ char* get_children(Edge* edge, char* code) {
     char* children = "";
     for (int i = 0; i< ASCII_SIZE; i++) {
         if (edge->children[i] != NULL) {
-            if (children == "") {
+            if (strcmp(children, "") == 0) {
                 asprintf(&children, "%s%d:%d,%d-%d", children, i, edge->children[i]->id, edge->children[i]->start, *edge->children[i]->end );
             } else {
                 asprintf(&children, "%s | %d:%d,%d-%d", children, i, edge->children[i]->id, edge->children[i]->start, *edge->children[i]->end );

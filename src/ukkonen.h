@@ -24,6 +24,8 @@ void readFile (char*);
 
 Edge* create_edge ();
 
+void activate_edge(Edge* e);
+
 void depth_first_search (Edge* edge, int* id);
 
 bool is_leaf (Edge* edge);
