@@ -55,74 +55,99 @@ void readFile(char *fileName) {
                 lastSplit = NULL;
             }
         } else {
-            if (activeLength - 1 < *activeEdge->end - activeEdge->start) {
-                // Er zijn nog characters op de huidige edge
-                if (code[activeEdge->start + activeLength] == c) {
-                    // Het volgend karakter zit al in de trie
-                    activeLength++;
-                    remainder++;
-                    c = fgetc(file);
-                    code[++n] = (char) c;
-                    lastSplit = NULL;
+            if (activeEdge == NULL) {
+                struct Edge* new = create_edge();
+                new->start = n;
+                new->end = &n;
+                activeNode->children[c] = new;
+                if (activeNode->suffix_link != NULL) {
+                    activeNode = activeNode->suffix_link;
+                    activeEdge = activeNode->children[code[n - activeLength]];
                 } else {
-                    // Split een edge in de originele en een nieuwe
-                    struct Edge *newEdge = create_edge();
-                    newEdge->start = n;
-                    newEdge->end = &n;
-                    struct Edge *splitEdge = create_edge();
-
-                    // SWAP
-                    Edge** tmp = splitEdge->children;
-                    splitEdge->children = activeEdge->children;
-                    activeEdge->children = tmp;
-
-                    splitEdge->start = activeEdge->start + activeLength;
-                    splitEdge->end = activeEdge->end;
-                    if (activeEdge->children == NULL) {
-                        activate_edge(activeEdge);
-                    }
-                    activeEdge->children[code[activeEdge->start + activeLength]] = splitEdge;
-                    activeEdge->children[c] = newEdge;
-                    int* end = malloc(sizeof(int));
-                    *end = activeEdge->start + activeLength - 1;
-                    activeEdge->end = end;
-                    remainder--;
-                    if (lastSplit != NULL) {
-                        lastSplit->suffix_link = activeEdge;
-//                        printf("Suffix link\n");
-                    }
-                    lastSplit = activeEdge;
-                    if (activeNode == root) {
-                        activeEdge = root->children[code[n - --activeLength]];
+                    activeNode = root;
+                    activeEdge = activeNode->children[code[n - activeLength]];
+                }
+                lastSplit = NULL;
+            } else {
+                if (activeLength - 1 < *activeEdge->end - activeEdge->start) {
+                    // Er zijn nog characters op de huidige edge
+                    if (code[activeEdge->start + activeLength] == c) {
+                        // Het volgend karakter zit al in de trie
+                        activeLength++;
+                        remainder++;
+                        c = fgetc(file);
+                        code[++n] = (char) c;
+                        lastSplit = NULL;
                     } else {
-                        if (activeNode->suffix_link != NULL) {
-                            activeNode = activeNode->suffix_link;
-                            activeEdge = activeNode->children[code[n - activeLength]];
+                        // Split een edge in de originele en een nieuwe
+                        struct Edge *newEdge = create_edge();
+                        newEdge->start = n;
+                        newEdge->end = &n;
+                        struct Edge *splitEdge = create_edge();
+
+                        // SWAP
+                        Edge **tmp = splitEdge->children;
+                        splitEdge->children = activeEdge->children;
+                        activeEdge->children = tmp;
+
+                        splitEdge->start = activeEdge->start + activeLength;
+                        splitEdge->end = activeEdge->end;
+                        if (activeEdge->children == NULL) {
+                            activate_edge(activeEdge);
+                        }
+                        activeEdge->children[code[activeEdge->start + activeLength]] = splitEdge;
+                        activeEdge->children[c] = newEdge;
+                        int *end = malloc(sizeof(int));
+                        *end = activeEdge->start + activeLength - 1;
+                        activeEdge->end = end;
+                        remainder--;
+                        if (lastSplit != NULL) {
+                            lastSplit->suffix_link = activeEdge;
+                        }
+                        lastSplit = activeEdge;
+                        if (activeNode == root) {
+                            activeEdge = root->children[code[n - --activeLength]];
                         } else {
-                            activeNode = root;
-                            activeEdge = activeNode->children[code[n - activeLength]];
+                            if (activeNode->suffix_link != NULL) {
+                                activeNode = activeNode->suffix_link;
+                                activeEdge = activeNode->children[code[n - activeLength]];
+                            } else {
+                                activeNode = root;
+                                activeEdge = activeNode->children[code[n - activeLength]];
+                            }
                         }
                     }
-                }
-            } else {
-                // Vorige c is het laatste karakter op de edge
-                if (activeEdge->children[c] == NULL) {
-                    struct Edge *new = create_edge();
-                    new->start = n;
-                    new->end = &n;
-                    if (lastSplit != NULL) {
-                        lastSplit->suffix_link = activeEdge;
-                    }
-                    activeEdge->children[c] = new;
-                    remainder--;
                 } else {
-                    activeNode = activeEdge;
-                    activeEdge = activeEdge->children[c];
-                    activeLength = 0;
-                    remainder++;
-                    c = fgetc(file);
-                    code[++n] = (char) c;
-                    lastSplit = NULL;
+                    // Vorige c is het laatste karakter op de edge
+                    if (activeEdge->children[c] == NULL) {
+                        struct Edge *new = create_edge();
+                        new->start = n;
+                        new->end = &n;
+                        if (lastSplit != NULL) {
+                            lastSplit->suffix_link = activeEdge;
+                        }
+                        activeEdge->children[c] = new;
+                        remainder--;
+                        if (activeNode == root) {
+                            activeEdge = root->children[code[n - --activeLength]];
+                        } else {
+                            if (activeNode->suffix_link != NULL) {
+                                activeNode = activeNode->suffix_link;
+                                activeEdge = activeNode->children[code[n - activeLength]];
+                            } else {
+                                activeNode = root;
+                                activeEdge = activeNode->children[code[n - activeLength]];
+                            }
+                        }
+                    } else {
+                        activeNode = activeEdge;
+                        activeEdge = activeEdge->children[c];
+                        activeLength = 1;
+                        remainder++;
+                        c = fgetc(file);
+                        code[++n] = (char) c;
+                        lastSplit = NULL;
+                    }
                 }
             }
         }
@@ -133,7 +158,7 @@ void readFile(char *fileName) {
     depth_first_search(root, id);
     free(id);
     edge_print(root, code, 0);
-    printf("\n");
+    printf("%d\n", remainder);
 }
 
 Edge* create_edge() {
@@ -163,7 +188,7 @@ void edge_print(Edge* edge, char* code, int distance) {
         } else {
             end = *edge->end + 1;
             char* children = get_children(edge, code);
-            printf("%d @ %d-%d = %s\n", edge->id, *edge->end - distance, *edge->end, children);
+            printf("%d @ %d-%d = %s\n", edge->id, edge->start - distance, *edge->end, children);
         }
         for (int i = 0; i< ASCII_SIZE; i++) {
             if (edge->children[i] != NULL) {
