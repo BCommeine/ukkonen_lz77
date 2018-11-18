@@ -20,16 +20,36 @@ typedef struct Edge {
     struct Edge* suffix_link;
 } Edge;
 
-void readFile (char*);
+struct ActivePoint {
+    Edge* activeNode;
+    int activeLength;
+    int activeChar;
+    int remaining;
+};
+
+struct Tree {
+    Edge* root;
+    Edge* lastSplit;
+    char* code;
+    int n;
+    char c;
+    int STRING_SIZE;
+};
+
+struct Tree* build_tree ();
+
+void read_char (struct Tree* tree);
+
+void update_active_point(struct ActivePoint* active_point, struct Tree* tree);
+
+void reset_active_edge(struct ActivePoint* active_point, int n);
 
 Edge* create_edge ();
 
 void activate_edge(Edge* e);
 
-void depth_first_search (Edge* edge, int* id);
+void print_and_free(struct Tree* tree);
+
+void depth_first_search (Edge* edge, int* id, int distance, char* code);
 
 bool is_leaf (Edge* edge);
-
-char* get_children (Edge* edge, char* code);
-
-void edge_print(Edge* edge, char* code, int distance);

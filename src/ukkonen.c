@@ -4,180 +4,190 @@
 
 #define _GNU_SOURCE
 #include <stdio.h>
-
-#include <stdbool.h>
-#include <stdio.h>
 #include <stdlib.h>
-#include <printf.h>
-#include <memory.h>
+
+
 #include "ukkonen.h"
 
 
-void readFile(char *fileName) {
-    FILE *file = fopen(fileName, "r");
-    char *code;
-    int n = -1;
-    int c;
-    struct Edge* root = create_edge();
-    activate_edge(root);
+struct Tree* build_tree() {
+    freopen("../src/test.txt", "r", stdin);
+    struct ActivePoint active_point;
+    struct Tree* tree = malloc(sizeof(struct Tree));
 
-    int activeEdge;
-    Edge* activeNode = root;
-    int activeLength = 0;
-    int remainder = 0;
+    tree->root = create_edge();
+    tree->STRING_SIZE = 1024;
 
-    if (file == NULL) return;
-    long f_size = ftell(file);
-    code = malloc(f_size);
+    // ACTIVE POINT
+    active_point.activeChar = 0;
+    active_point.activeNode = tree->root;
+    active_point.activeLength = 0;
 
-    c = fgetc(file);
-    code[++n] = (char) c;
+    tree->code = malloc(tree->STRING_SIZE * sizeof(char));
 
-    Edge* lastSplit = NULL;
+    tree->n = -1;
+    read_char(tree);
 
-    while (c != EOF) {
-        remainder++;
-        lastSplit = NULL;
-        while (remainder > 0) {
-           if (activeLength == 0) {
-               activeEdge = n;
-           }
-           if (activeNode->children ==  NULL || activeNode->children[code[activeEdge]] == NULL) {
-               Edge* new = create_edge();
-               new->start = n;
-               new->end = &n;
-               if (activeNode->children == NULL) {
-                   activate_edge(activeNode);
-               }
-               activeNode->children[code[activeEdge]] = new;
-               if (lastSplit != NULL) {
-                   lastSplit->suffix_link = activeNode;
-               }
-               lastSplit = activeNode;
-           } else {
-               Edge* next = activeNode->children[code[activeEdge]];
-               if (activeLength >= *next->end - next->start + 1) {
-                   activeEdge += *next->end - next->start + 1;
-                   activeLength -= *next->end - next->start + 1;
-                   activeNode = next;
-                   continue;
-               }
-               if (code[next->start + activeLength] == c) {
-                   activeLength++;
-                   if (lastSplit != NULL) {
-                       lastSplit->suffix_link = activeNode;
-                   }
-                   lastSplit = activeNode;
-                   break;
-               }
-               // Split een edge in de originele en een nieuwe
-               Edge* leaf = create_edge();
-               leaf->start = n;
-               leaf->end = &n;
-                // Hier geraken we pas nadat we een karakter lezen die er niet is, vandaar de n
+    active_point.remaining = 0;
+    tree->lastSplit= NULL;
 
-               Edge* split = create_edge();
-               activate_edge(split);
-               activeNode->children[code[next->start]] = split;
+    while (tree->c != EOF) {
+        active_point.remaining++;
+        tree->lastSplit = NULL;
+        reset_active_edge(&active_point, tree->n);
+        while (active_point.remaining > 0) {
+            if (active_point.activeNode->children == NULL) {
+                activate_edge(active_point.activeNode);
+            }
+            if (active_point.activeNode->children[(unsigned char) tree->code[active_point.activeChar]] == NULL) {
+                Edge* new = create_edge();
+                new->start = tree->n;
+                new->end = &tree->n;
+                active_point.activeNode->children[(unsigned char) tree->code[active_point.activeChar]] = new;
+                if ( active_point.activeNode != tree->root) {
+                    if (tree->lastSplit != NULL) {
+                        tree->lastSplit->suffix_link = active_point.activeNode;
+                    }
+                    tree->lastSplit = active_point.activeNode;
+                }
+                active_point.remaining--;
+                update_active_point(&active_point, tree);
+            } else {
+                Edge *activeEdge = active_point.activeNode->children[(unsigned char) tree->code[active_point.activeChar]];
+                int length = *activeEdge->end - activeEdge->start + 1;
+                if (active_point.activeLength < length) {
+                    if (tree->code[activeEdge->start + active_point.activeLength] == tree->c) {
+                        active_point.activeLength++;
+                        if (tree->lastSplit != NULL) {
+                            tree->lastSplit->suffix_link = active_point.activeNode;
+                        }
+                        tree->lastSplit = active_point.activeNode;
+                        break;
+                    }
+                    Edge *leaf = create_edge();
+                    leaf->start = tree->n;
+                    leaf->end = &tree->n;
 
-               split->start = next->start;
-               int *end = malloc(sizeof(int));
-               *end = next->start + activeLength - 1;
-               split->end = end;
+                    Edge *split = create_edge();
+                    activate_edge(split);
+                    active_point.activeNode->children[(unsigned char) tree->code[activeEdge->start]] = split;
 
-               split->children[c] = leaf; //nope
-               next->start += activeLength;
-               split->children[code[next->start]] = next;
-               if (lastSplit != NULL) {
-                   lastSplit->suffix_link = split;
-               }
-               lastSplit = split;           }
-           remainder --;
-           if (activeNode == root && activeLength > 0) {
-               activeLength--;
-               activeEdge = n - remainder + 1;
-           } else {
-               if (activeNode->suffix_link != NULL) {
-                   activeNode = activeNode->suffix_link;
-               } else {
-                   activeNode = root;
-               }
-           }
-       }
-        c = fgetc(file);
-        code[++n] = (char) c;
+                    split->start = activeEdge->start;
+                    int *end = malloc(sizeof(int));
+                    *end = activeEdge->start + active_point.activeLength - 1;
+                    split->end = end;
+
+                    split->children[ (unsigned char) tree->c] = leaf; //nope
+                    activeEdge->start += active_point.activeLength;
+                    split->children[ (unsigned char) tree->code[activeEdge->start]] = activeEdge;
+                    if (tree->lastSplit != NULL) {
+                        tree->lastSplit->suffix_link = split;
+                    }
+                    tree->lastSplit = split;
+                    active_point.remaining--;
+                    update_active_point(&active_point, tree);
+                } else { // SKIP
+                    active_point.activeChar += length;
+                    active_point.activeLength -= length;
+                    active_point.activeNode = activeEdge;
+                }
+            }
+        }
+        read_char(tree);
     }
-    --n;
-    int* id = malloc(sizeof(int));
-    *id = 0;
-    depth_first_search(root, id);
-    free(id);
-    edge_print(root, code, 0);
-    printf("%d\n", remainder);
+    // Aangezien ons hudig karakter EOF is, keren we terug tot de index van ons laatste karakter.
+    --tree->n;
+    return tree;
+}
+
+void read_char(struct Tree* tree){
+  if (++tree->n  == tree->STRING_SIZE - 1){
+        tree->STRING_SIZE *= 2;
+        tree->code = realloc(tree->code, tree->STRING_SIZE * sizeof(char));
+    }
+    tree->c = (char) fgetc(stdin);
+    tree->code[tree->n] = tree->c;
+}
+
+
+void update_active_point(struct ActivePoint* active_point, struct Tree* tree){
+    if (active_point->activeNode == tree->root && active_point->activeLength > 0) {
+        active_point->activeLength--;
+        active_point->activeChar = tree->n - active_point->remaining + 1;
+    } else {
+        if (active_point->activeNode != tree->root && active_point->activeNode->suffix_link != NULL) {
+            active_point->activeNode = active_point->activeNode->suffix_link;
+        } else {
+            active_point->activeNode = tree->root;
+        }
+    }
+}
+
+void reset_active_edge(struct ActivePoint* active_point, int n) {
+    if (active_point->activeLength == 0) {
+        active_point->activeChar = n;
+    }
 }
 
 Edge* create_edge() {
-    Edge* e         = malloc(sizeof(Edge));
-    e->suffix_link  = NULL;
-    return e;
+    return calloc(1, sizeof(Edge));
 }
 
 void activate_edge(Edge* e) {
     e->children     = calloc(ASCII_SIZE, sizeof(Edge*));
 }
 
-void edge_print(Edge* edge, char* code, int distance) {
-    int end;
-    if (is_leaf(edge)) {
-        if (edge->end == NULL) {
-            // edge is de root
-            printf("%d @ -\n", edge->id);
-        } else {
-            printf("%d @ %d-%d\n", edge->id, edge->start - distance , *edge->end);
-        }
-    } else {
-        if (edge->end == NULL) {
-            end = 0;
-            char* children = get_children(edge, code);
-            printf("%d @  -  = %s\n", edge->id, children);
-        } else {
-            end = *edge->end + 1;
-            char* children = get_children(edge, code);
-            printf("%d @ %d-%d = %s\n", edge->id, edge->start - distance, *edge->end, children);
-        }
-        for (int i = 0; i< ASCII_SIZE; i++) {
-            if (edge->children[i] != NULL) {
-                edge_print(edge->children[i], code, distance + (end - edge->start));
-            }
-        }
-    }
-}
-
 bool is_leaf(Edge* edge) {
     return edge->children == NULL;
 }
 
-void depth_first_search(Edge* edge, int* id) {
-    if (edge->children != NULL) {
-        for (int i = 0; i< ASCII_SIZE; i++) {
-            if (edge->children[i] != NULL) {
-                edge->children[i]->id = ++*id;
-                depth_first_search(edge->children[i], id);
-            }
-        }
-    }
+void print_and_free(struct Tree* tree) {
+    int* id = malloc(sizeof(int));
+    *id = -1;
+    depth_first_search(tree->root, id, 0, tree->code);
+    free(id);
+    free(tree->root);
+    free(tree->code);
+    free(tree);
 }
 
-char* get_children(Edge* edge, char* code) {
-    char* children = "";
-    for (int i = 0; i< ASCII_SIZE; i++) {
-        if (edge->children[i] != NULL) {
-            if (strcmp(children, "") == 0) {
-                asprintf(&children, "%s%d:%d,%d-%d", children, i, edge->children[i]->id, edge->children[i]->start, *edge->children[i]->end );
-            } else {
-                asprintf(&children, "%s | %d:%d,%d-%d", children, i, edge->children[i]->id, edge->children[i]->start, *edge->children[i]->end );
+void depth_first_search(Edge* edge, int* id, int distance, char* code) {
+    edge->id = ++*id;
+    if (!is_leaf(edge)) {
+        int end = edge->end == NULL? 0: *edge->end + 1;
+        char* children = "";
+        char* tmp = NULL;
+        for (int i = 0; i < ASCII_SIZE; i++) {
+            if (edge->children[i] != NULL) {
+                depth_first_search(edge->children[i], id, distance + (end - edge->start), code);
+                if (tmp == NULL) {
+                    asprintf(&children, "%d:%d,%d-%d", i, edge->children[i]->id, edge->children[i]->start,
+                             *edge->children[i]->end);
+                } else {
+                    asprintf(&children, "%s | %d:%d,%d-%d", tmp, i, edge->children[i]->id,
+                             edge->children[i]->start, *edge->children[i]->end);
+                }
+                free(tmp);
+                tmp = children;
+                if (!is_leaf(edge->children[i])) {
+                    free(edge->children[i]->end);
+                }
+                free(edge->children[i]);
             }
         }
+        free(edge->children);
+        if (edge->end == NULL) {
+            printf("%d @  -  = %s\n", edge->id, children);
+        } else {
+            printf("%d @ %d-%d = %s\n", edge->id, edge->start - distance, *edge->end, children);
+        }
+        free(children);
+    } else {
+        if (edge->end == NULL) {
+            // edge is de root
+            printf("%d @ -\n", edge->id);
+        } else {
+            printf("%d @ %d-%d\n", edge->id, edge->start - distance, *edge->end);
+        }
     }
-    return children;
 }
