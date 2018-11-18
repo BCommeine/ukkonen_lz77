@@ -11,7 +11,7 @@
 
 
 struct Tree* build_tree() {
-    freopen("../src/test.txt", "r", stdin);
+//    freopen("../src/test.txt", "r", stdin);
     struct ActivePoint active_point;
     struct Tree* tree = malloc(sizeof(struct Tree));
 

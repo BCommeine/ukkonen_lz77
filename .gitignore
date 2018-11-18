@@ -3,6 +3,9 @@
 
 # User-specific stuff
 ./src/idea/*
-
+./idea/*
+.idea/
+./CMake*/*
+CMakeLists.txt
 # CMake
 cmake-build-*/
