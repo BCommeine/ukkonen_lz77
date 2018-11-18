@@ -3,12 +3,9 @@
 //
 
 #define _GNU_SOURCE
-#include <stdio.h>
-#include <stdlib.h>
 
-
+#include <string.h>
 #include "ukkonen.h"
-
 
 struct Tree* build_tree() {
 //    freopen("../src/test.txt", "r", stdin);
@@ -95,8 +92,9 @@ struct Tree* build_tree() {
         }
         read_char(tree);
     }
-    // Aangezien ons hudig karakter EOF is, keren we terug tot de index van ons laatste karakter.
-    --tree->n;
+    // We hebben zonet het EOF karakter toegevoegd aan onze string. Nu zetten ze onze index een stap terug,
+    // en zetten het laatste karakter op een null termination
+    tree->code[tree->n--] = '\0';
     return tree;
 }
 
