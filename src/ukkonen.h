@@ -10,6 +10,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 
 #define ASCII_SIZE 128
 
@@ -19,6 +20,7 @@ typedef struct Edge {
     int* end;
     struct Edge** children;
     struct Edge* suffix_link;
+    uint32_t begin_suffix;
 } Edge;
 
 struct ActivePoint {
@@ -34,10 +36,13 @@ struct Tree {
     char* code;
     int n;
     char c;
+    uint32_t beg;
     int STRING_SIZE;
 };
 
 struct Tree* build_tree ();
+
+bool add_char(struct Tree* tree, struct ActivePoint* active_point);
 
 void read_char (struct Tree* tree);
 
