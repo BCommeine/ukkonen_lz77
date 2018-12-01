@@ -8,7 +8,7 @@
 #endif //UKKONEN_LEMPEL_ZIV_H
 
 #include <stdint.h>
-#include "ukkonen.h"
+#include "../ukkonen/ukkonen.h"
 
 struct Triple {
     uint32_t start;

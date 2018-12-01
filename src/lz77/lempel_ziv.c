@@ -48,12 +48,10 @@ void codeer_lz (){
         }
         read_char(tree);
     }
-//    print_and_free(tree);
-
+    free_tree(tree);
 }
 
 void output(uint32_t start, uint32_t length, uint8_t character) {
-//    printf("Begin: %u | Lengte: %u | Character: %c\n",(uint32_t) start, (uint32_t) length, character);
     fwrite(&start, sizeof(uint32_t), 1, stdout);
     fwrite(&length, sizeof(uint32_t), 1, stdout);
     fwrite(&character, sizeof(uint8_t), 1, stdout);
@@ -66,7 +64,7 @@ void decodeer_lz () {
     struct Triple* triple;
     for (int i = 0; i < 2000; ++i) {
         triple = read_triple();
-        for (uint index = 0; index < triple->length; index++) {
+        for (uint32_t index = 0; index < triple->length; index++) {
             *code++ = begin[index + triple->start];
         }
         *code++ = triple->character;

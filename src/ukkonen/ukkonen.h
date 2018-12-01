@@ -56,6 +56,10 @@ void activate_edge(Edge* e);
 
 void print_and_free(struct Tree* tree);
 
-void depth_first_search (Edge* edge, int* id, int distance, char* code);
+void free_tree(struct Tree* tree);
+
+void depth_first_search_print (Edge* edge, int* id, int distance, char* code);
+
+void depth_first_search (Edge* edge);
 
 bool is_leaf (Edge* edge);

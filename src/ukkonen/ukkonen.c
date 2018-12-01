@@ -64,13 +64,10 @@ bool add_char(struct Tree* tree, struct ActivePoint* active_point) {
             int length = *activeEdge->end - activeEdge->start + 1;
             if (active_point->activeLength < length) {
                 if (tree->code[activeEdge->start + active_point->activeLength] == tree->c) {
-                    bool result;
                     active_point->activeLength++;
                     if (tree->lastSplit != NULL) {
-                        result = false;
                         tree->lastSplit->suffix_link = active_point->activeNode;
                     } else {
-                        result = true;
                         tree->beg = activeEdge->begin_suffix;
                     }
                     tree->lastSplit = active_point->activeNode;
@@ -155,14 +152,14 @@ bool is_leaf(Edge* edge) {
 void print_and_free(struct Tree* tree) {
     int* id = malloc(sizeof(int));
     *id = -1;
-    depth_first_search(tree->root, id, 0, tree->code);
+    depth_first_search_print(tree->root, id, 0, tree->code);
     free(id);
     free(tree->root);
     free(tree->code);
     free(tree);
 }
 
-void depth_first_search(Edge* edge, int* id, int distance, char* code) {
+void depth_first_search_print(Edge* edge, int* id, int distance, char* code) {
     edge->id = ++*id;
     if (!is_leaf(edge)) {
         int end = edge->end == NULL? 0: *edge->end + 1;
@@ -170,7 +167,7 @@ void depth_first_search(Edge* edge, int* id, int distance, char* code) {
         char* tmp = NULL;
         for (int i = 0; i < ASCII_SIZE; i++) {
             if (edge->children[i] != NULL) {
-                depth_first_search(edge->children[i], id, distance + (end - edge->start), code);
+                depth_first_search_print(edge->children[i], id, distance + (end - edge->start), code);
                 if (tmp == NULL) {
                     asprintf(&children, "%d:%d,%d-%d", i, edge->children[i]->id, edge->children[i]->start,
                              *edge->children[i]->end);
@@ -200,5 +197,30 @@ void depth_first_search(Edge* edge, int* id, int distance, char* code) {
         } else {
             printf("%d @ %d-%d\n", edge->id, edge->start - distance, *edge->end);
         }
+    }
+}
+
+void free_tree(struct Tree* tree) {
+    int* id = malloc(sizeof(int));
+    *id = -1;
+    depth_first_search(tree->root);
+    free(id);
+    free(tree->root);
+    free(tree->code);
+    free(tree);
+}
+
+void depth_first_search(Edge* edge) {
+    if (!is_leaf(edge)) {
+        for (int i = 0; i < ASCII_SIZE; i++) {
+            if (edge->children[i] != NULL) {
+                depth_first_search(edge->children[i]);
+                if (!is_leaf(edge->children[i])) {
+                    free(edge->children[i]->end);
+                }
+                free(edge->children[i]);
+            }
+        }
+        free(edge->children);
     }
 }

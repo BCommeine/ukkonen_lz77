@@ -1,1 +1,2 @@
-ukkonen: main.c ukkonen.c ukkonen.h
+ukkonen: ukkonen/main.c ukkonen/ukkonen.c ukkonen/ukkonen.h
+lz77: lz77/main.c ukkonen/ukkonen.c ukkonen/ukkonen.h lz77/lempel_ziv.c lz77/lempel_ziv.h

@@ -6,7 +6,7 @@
 #define UKKONEN_UKKONEN_TEST_H
 
 #endif //UKKONEN_UKKONEN_TEST_H
-#include "../src/ukkonen.h"
+#include "ukkonen/ukkonen.h"
 
 #include <string.h>
 #include <stdbool.h>
