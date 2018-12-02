@@ -1,7 +1,7 @@
 #!/usr/bin/env bash#!/bin/bash
 
 cat testfiles/test_one.txt | ././../cmake-build-debug/lz77 -c | ././../cmake-build-debug/lz77 -d > testfiles/output
-if diff -s -a testfiles/output testfiles/test_one.txt
+if diff -s -a testfiles/output testfiles/test_one.txt >> /dev/null
 then
     echo "Testfile one:         SUCCESFUL"
 else
@@ -33,3 +33,10 @@ else
     echo "Testfile four:        FAILED"
 fi
 
+cat testfiles/30mb.txt | ././../cmake-build-debug/lz77 -o -c | ././../cmake-build-debug/lz77 -o -d > testfiles/output
+if diff -s -a testfiles/output testfiles/30mb.txt >> /dev/null
+then
+    echo "Testing optimize:     SUCCESFUL"
+else
+    echo "Testing optimize:     FAILED"
+fi

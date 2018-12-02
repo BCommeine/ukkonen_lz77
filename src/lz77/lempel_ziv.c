@@ -2,11 +2,10 @@
 // Created by bert on 22/11/18.
 //
 
-#include <memory.h>
 #include "lempel_ziv.h"
 
-void codeer_lz (){
-//    freopen("../tests/testfiles/frans_korter.txt", "r", stdin);
+
+void codeer_lz (bool optimize){
     struct ActivePoint active_point;
     struct Tree* tree = malloc(sizeof(struct Tree));
 
@@ -31,18 +30,20 @@ void codeer_lz (){
     add_char(tree, &active_point);
 
     while (tree->c != EOF) {
-        read_char(tree);
+        next_char(tree, optimize);
         int begin = tree->n;
-        search_match(tree);
+        search_match(tree, optimize);
         int end = tree->n;
-        for (int i = begin; i <= end; i++) {
-            tree->n = i;
-            tree->c = tree->code[i];
-            active_point.remaining++;
-            tree->lastSplit = NULL;
-            if (tree->c != EOF) {
-                reset_active_edge(&active_point, tree->n);
-                add_char(tree, &active_point);
+        if (!optimize || tree->n < MEMORY_LIMIT) {
+            for (int i = begin; i <= end; i++) {
+                tree->n = i;
+                tree->c = tree->code[i];
+                active_point.remaining++;
+                tree->lastSplit = NULL;
+                if (tree->c != EOF) {
+                    reset_active_edge(&active_point, tree->n);
+                    add_char(tree, &active_point);
+                }
             }
         }
     }
@@ -58,12 +59,21 @@ struct Position* create_position(struct Tree* tree) {
     return position;
 }
 
-void search_match(struct Tree* tree) {
+void search_match(struct Tree* tree, bool optimize) {
     struct Position* position = create_position(tree);
     while (search_char(tree, position)) {
-        read_char(tree);
+        next_char(tree, optimize);
     }
     free(position);
+}
+
+void next_char(struct Tree* tree, bool optimize) {
+    if (!optimize || tree->n < MEMORY_LIMIT) {
+        read_char(tree);
+    } else {
+        tree->c = (char) fgetc(stdin);
+        ++tree->n;
+    }
 }
 
 bool search_char(struct Tree* tree, struct Position* position) {
@@ -108,8 +118,7 @@ void output(uint32_t start, uint32_t length, uint8_t character) {
     }
 }
 
-void decodeer_lz () {
-//    freopen("../tests/testfiles/output", "r", stdin);
+void decodeer_lz (bool optimize) {
     struct Decoder* dec = malloc(sizeof(struct Decoder));
 
     dec->n = 0;
@@ -120,16 +129,18 @@ void decodeer_lz () {
 
     while (triple->character != '\0') {
         for (uint32_t index = 0; index < triple->length; index++) {
-            write_char(dec, dec->begin[index + triple->start]);
+            write_char(dec, dec->begin[index + triple->start], optimize);
         }
-        write_char(dec, triple->character);
+        write_char(dec, triple->character, optimize);
         free(triple);
         triple = read_triple();
     }
     for (uint32_t index = 0; index < triple->length; index++) {
-        write_char(dec, dec->begin[index + triple->start]);
+        write_char(dec, dec->begin[index + triple->start], optimize);
     }
-    printf("%s", dec->begin);
+    if (!optimize || dec->n <= MEMORY_LIMIT) {
+        printf("%s", dec->begin);
+    }
     free(dec->begin);
     free(dec);
     free(triple);
@@ -143,10 +154,20 @@ struct Triple* read_triple(){
     return triple;
 }
 
-void write_char(struct Decoder* dec, char character) {
-    if (dec->n  == dec->STRING_SIZE - 1){
-        dec->STRING_SIZE *= 2;
-        dec->begin = realloc(dec->begin, dec->STRING_SIZE * sizeof(char));
+void write_char(struct Decoder* dec, char character, bool optimize) {
+    if (!optimize || dec->n < MEMORY_LIMIT) {
+        if (dec->n  == dec->STRING_SIZE - 1){
+            dec->STRING_SIZE *= 2;
+            dec->begin = realloc(dec->begin, dec->STRING_SIZE * sizeof(char));
+        }
+        dec->begin[dec->n++] = character;
+    } else {
+        if (dec->n == MEMORY_LIMIT) {
+            printf("%s", dec->begin);
+            printf("%c", character);
+            dec->n++;
+        } else {
+            printf("%c", character);
+        }
     }
-    dec->begin[dec->n++] = (char) character;
 }
