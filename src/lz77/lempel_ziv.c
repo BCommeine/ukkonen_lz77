@@ -2,16 +2,16 @@
 // Created by bert on 22/11/18.
 //
 
+#include <memory.h>
 #include "lempel_ziv.h"
 
 void codeer_lz (){
-//    freopen("./data", "r", stdin);
     struct ActivePoint active_point;
     struct Tree* tree = malloc(sizeof(struct Tree));
 
     tree->root = create_edge();
     tree->root->begin_suffix = 0;
-    tree->STRING_SIZE = 1024;
+    tree->STRING_SIZE = 800;
 
     // ACTIVE POINT
     active_point.activeChar = 0;
@@ -39,15 +39,18 @@ void codeer_lz (){
             tree->c = tree->code[i];
             active_point.remaining++;
             tree->lastSplit = NULL;
-            reset_active_edge(&active_point, tree->n);
-            add_char(tree, &active_point);
+            if (tree->c != EOF) {
+                reset_active_edge(&active_point, tree->n);
+                add_char(tree, &active_point);
+            }
         }
     }
+
     free_tree(tree);
 }
 
 struct Position* create_position(struct Tree* tree) {
-    struct Position* position = malloc(sizeof(struct Position));
+    struct Position* position = calloc(1, sizeof(struct Position));
     position->edge = tree->root;
     position->active_char = 0;
     position->length = 0;
@@ -65,7 +68,6 @@ void search_match(struct Tree* tree) {
 bool search_char(struct Tree* tree, struct Position* position) {
     if (tree->c == EOF) {
         output(position->edge->begin_suffix, (uint32_t) position->length, (uint8_t) '\0');
-        tree->n--;
         return false;
     }
     int length = position->edge->end == NULL? 0:  *position->edge->end - position->edge->start + 1;
@@ -103,11 +105,10 @@ void output(uint32_t start, uint32_t length, uint8_t character) {
         fwrite(&zero, sizeof(uint32_t), 1, stdout);
         fwrite(&character, sizeof(uint8_t), 1, stdout);
     }
-//    printf("Begin: %u | Lengte: %u | Character: %c\n",(uint32_t) start, (uint32_t) length, character);
 }
 
 void decodeer_lz () {
-    char* code = calloc(1000, sizeof(char));
+    char* code = calloc(1000000, sizeof(char));
     char* begin = code;
     struct Triple* triple = read_triple();
     while (triple->character != '\0') {
@@ -115,9 +116,15 @@ void decodeer_lz () {
             *code++ = begin[index + triple->start];
         }
         *code++ = triple->character;
+        free(triple);
         triple = read_triple();
     }
+    for (uint32_t index = 0; index < triple->length; index++) {
+        *code++ = begin[index + triple->start];
+    }
     printf("%s", begin);
+    free(begin);
+    free(triple);
 }
 
 struct Triple* read_triple(){

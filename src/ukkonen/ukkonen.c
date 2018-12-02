@@ -55,7 +55,7 @@ void add_char(struct Tree* tree, struct ActivePoint* active_point) {
                     tree->lastSplit->suffix_link = active_point->activeNode;
                 }
                 tree->lastSplit = active_point->activeNode;
-                new->begin_suffix = tree->n - (active_point->activeNode->start - active_point->activeNode->begin_suffix) - 1;
+                new->begin_suffix =  tree->n - active_point->remaining + 1;
             } else {
                 new->begin_suffix = (uint32_t ) tree->n;
             }
@@ -95,7 +95,7 @@ void add_char(struct Tree* tree, struct ActivePoint* active_point) {
                     tree->lastSplit->suffix_link = split;
                 }
                 tree->lastSplit = split;
-                leaf->begin_suffix = tree->n - (activeEdge->start - activeEdge->begin_suffix); // start - distance
+                leaf->begin_suffix = tree->n - active_point->remaining + 1; // start - distance
                 active_point->remaining--;
                 update_active_point(active_point, tree);
             } else { // SKIP

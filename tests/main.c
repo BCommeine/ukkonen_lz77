@@ -1,12 +1,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <lz77/lempel_ziv.h>
-#include "lz77_test.h"
+#include "ukkonen_test.h"
 
 int main(int argc, char *argv[]) {
-    if (codeer_daarna_decodeer("../tests/testfiles/test_one.txt")) {
-        printf("CODEER EN DECODEER GESLAAGD");
+    if (test_number_of_leaves("../tests/testfiles/test_two.txt")) {
+        printf("Number of leaves:\t\tCorrect\n");
+    } else {
+        printf("Number of leaves:\t\tWrong\n");
     }
-    printf("CODEER EN DECODEER GESLAAGD");
+    if (test_all_suffixes("../tests/testfiles/test_four.txt")) {
+        printf("All suffixes present:\tCorrect\n");
+    } else {
+        printf("All suffixes present:\tWrong");
+    }
     return (0);
 }
