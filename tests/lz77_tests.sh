@@ -1,7 +1,7 @@
 #!/usr/bin/env bash#!/bin/bash
 
 cat testfiles/test_one.txt | ././../cmake-build-debug/lz77 -c | ././../cmake-build-debug/lz77 -d > testfiles/output
-if diff -s -a testfiles/output testfiles/test_one.txt >> /dev/null
+if diff -s -a testfiles/output testfiles/test_one.txt
 then
     echo "Testfile one:         SUCCESFUL"
 else

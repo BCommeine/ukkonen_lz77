@@ -16,8 +16,14 @@ struct Triple {
 
 struct Position {
     Edge* edge;
-    int active_char;
-    int length;
+    unsigned int active_char;
+    unsigned int length;
+};
+
+struct Decoder {
+    unsigned int n;
+    unsigned int STRING_SIZE;
+    char* begin;
 };
 
 void codeer_lz ();
@@ -33,5 +39,7 @@ void output(uint32_t start, uint32_t length, uint8_t character);
 struct Triple* read_triple();
 
 void decodeer_lz ();
+
+void write_char(struct Decoder* dec, char character);
 
 #endif //UKKONEN_LEMPEL_ZIV_H

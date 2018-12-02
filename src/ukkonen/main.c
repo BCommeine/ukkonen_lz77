@@ -7,8 +7,6 @@
 #include "ukkonen.h"
 
 int main(int argc, char *argv[]) {
-    freopen("../tests/testfiles/test_four.txt","r", stdin);
     struct Tree* tree = build_tree();
-    printf("%s", tree->code);
-    free_tree(tree);
+    print_and_free(tree);
 }

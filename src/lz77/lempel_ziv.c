@@ -6,12 +6,13 @@
 #include "lempel_ziv.h"
 
 void codeer_lz (){
+//    freopen("../tests/testfiles/frans_korter.txt", "r", stdin);
     struct ActivePoint active_point;
     struct Tree* tree = malloc(sizeof(struct Tree));
 
     tree->root = create_edge();
     tree->root->begin_suffix = 0;
-    tree->STRING_SIZE = 800;
+    tree->STRING_SIZE = 1000;
 
     // ACTIVE POINT
     active_point.activeChar = 0;
@@ -108,22 +109,29 @@ void output(uint32_t start, uint32_t length, uint8_t character) {
 }
 
 void decodeer_lz () {
-    char* code = calloc(1000000, sizeof(char));
-    char* begin = code;
+//    freopen("../tests/testfiles/output", "r", stdin);
+    struct Decoder* dec = malloc(sizeof(struct Decoder));
+
+    dec->n = 0;
+    dec->STRING_SIZE = 1000;
+    dec->begin = calloc(1, dec->STRING_SIZE);
+
     struct Triple* triple = read_triple();
+
     while (triple->character != '\0') {
         for (uint32_t index = 0; index < triple->length; index++) {
-            *code++ = begin[index + triple->start];
+            write_char(dec, dec->begin[index + triple->start]);
         }
-        *code++ = triple->character;
+        write_char(dec, triple->character);
         free(triple);
         triple = read_triple();
     }
     for (uint32_t index = 0; index < triple->length; index++) {
-        *code++ = begin[index + triple->start];
+        write_char(dec, dec->begin[index + triple->start]);
     }
-    printf("%s", begin);
-    free(begin);
+    printf("%s", dec->begin);
+    free(dec->begin);
+    free(dec);
     free(triple);
 }
 
@@ -133,4 +141,12 @@ struct Triple* read_triple(){
     fread(&triple->length, sizeof(uint32_t), 1, stdin);
     fread(&triple->character, sizeof(uint8_t), 1, stdin);
     return triple;
+}
+
+void write_char(struct Decoder* dec, char character) {
+    if (dec->n  == dec->STRING_SIZE - 1){
+        dec->STRING_SIZE *= 2;
+        dec->begin = realloc(dec->begin, dec->STRING_SIZE * sizeof(char));
+    }
+    dec->begin[dec->n++] = (char) character;
 }
