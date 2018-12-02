@@ -5,8 +5,6 @@
 #ifndef PROJECT_UKKONEN_H
 #define PROJECT_UKKONEN_H
 
-#endif
-
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -36,13 +34,12 @@ struct Tree {
     char* code;
     int n;
     char c;
-    uint32_t beg;
     int STRING_SIZE;
 };
 
 struct Tree* build_tree ();
 
-bool add_char(struct Tree* tree, struct ActivePoint* active_point);
+void add_char(struct Tree* tree, struct ActivePoint* active_point);
 
 void read_char (struct Tree* tree);
 
@@ -63,3 +60,5 @@ void depth_first_search_print (Edge* edge, int* id, int distance, char* code);
 void depth_first_search (Edge* edge);
 
 bool is_leaf (Edge* edge);
+
+#endif

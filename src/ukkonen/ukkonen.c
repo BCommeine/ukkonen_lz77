@@ -40,7 +40,7 @@ struct Tree* build_tree() {
     return tree;
 }
 
-bool add_char(struct Tree* tree, struct ActivePoint* active_point) {
+void add_char(struct Tree* tree, struct ActivePoint* active_point) {
     while (active_point->remaining > 0) {
         if (active_point->activeNode->children == NULL) {
             activate_edge(active_point->activeNode);
@@ -55,8 +55,10 @@ bool add_char(struct Tree* tree, struct ActivePoint* active_point) {
                     tree->lastSplit->suffix_link = active_point->activeNode;
                 }
                 tree->lastSplit = active_point->activeNode;
+                new->begin_suffix = tree->n - (active_point->activeNode->start - active_point->activeNode->begin_suffix) - 1;
+            } else {
+                new->begin_suffix = (uint32_t ) tree->n;
             }
-            new->begin_suffix = tree->n - (active_point->activeNode->start - active_point->activeNode->begin_suffix);
             active_point->remaining--;
             update_active_point(active_point, tree);
         } else {
@@ -67,11 +69,9 @@ bool add_char(struct Tree* tree, struct ActivePoint* active_point) {
                     active_point->activeLength++;
                     if (tree->lastSplit != NULL) {
                         tree->lastSplit->suffix_link = active_point->activeNode;
-                    } else {
-                        tree->beg = activeEdge->begin_suffix;
                     }
                     tree->lastSplit = active_point->activeNode;
-                    return false;
+                    return;
                 }
                 Edge *leaf = create_edge();
                 leaf->start = tree->n;
@@ -105,7 +105,6 @@ bool add_char(struct Tree* tree, struct ActivePoint* active_point) {
             }
         }
     }
-    return false;
 }
 
 void read_char(struct Tree* tree){
@@ -201,10 +200,7 @@ void depth_first_search_print(Edge* edge, int* id, int distance, char* code) {
 }
 
 void free_tree(struct Tree* tree) {
-    int* id = malloc(sizeof(int));
-    *id = -1;
     depth_first_search(tree->root);
-    free(id);
     free(tree->root);
     free(tree->code);
     free(tree);

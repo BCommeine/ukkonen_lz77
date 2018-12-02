@@ -47,7 +47,7 @@ else
         | base64 -d > $TMPDIR/expected.txt
 
     echo -e "\n\n"
-    echo "diff -w -s -a output expected  "
+    echo "diff -w -a output expected  "
     echo "(trough xxd -g 4 -c 9 -e | sed 's/.*: //;s/     \.\./ /;s/\.\{4\}/=/') "
     echo ""
     echo "   INDEX    LENGTH  CHAR"
@@ -82,7 +82,7 @@ else
     cat $TMPDIR/input.txt | "$TMPDIR/lz77" -o -c |  "$TMPDIR/lz77" -o -d > $TMPDIR/output.txt
 
     echo -e "\n\n"
-    echo "diff -w -s -a output data"
+    echo "diff -w -a output data"
     echo ""
     diff -s -a \
         $TMPDIR/output.txt \
